@@ -64,6 +64,7 @@ public class Conf {
         public static final String DCCUsersRole = "Document Controlers Role";
         public static final String PRJUsersRole = "Project Users";
         public static final String ContractorUsersRole = "Contractor Users";
+        public static final String ExternalUsersUnit = "ExternalReader";
     }
 
 
