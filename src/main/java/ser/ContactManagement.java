@@ -43,14 +43,8 @@ public class ContactManagement extends UnifiedAgent {
                 cuser.setLastName(mainDocument.getDescriptorValue("PersonLastName"));
                 cuser.commit();
             }
-            //updateMembers2GVList("CCM_PARAM_CONTRACTOR-MEMBERS", mainDocument.getDescriptorValue("ccmPRJCard_code"), mainDocument);
-            log.info("----OnChangeProjectCard Updated Project Members GVList ---for (ID):" + mainDocument.getID());
-
-            //updateUnitsByPrjCard(mainDocument.getDescriptorValue("ccmPRJCard_code"),getPrjMembersFromPrjCard(mainDocument));
-            log.info("----OnChangeProjectCard updated Units ---for IDocument ID:--" + mainDocument.getID());
-
-            //updateRolesFromGVList(mainDocument);
-            log.info("----OnChangeProjectCard Updated Roles from ProjectCard ---for (ID):" + mainDocument.getID());
+            log.info("----Contact Updated --- for (User):" + loginName);
+            log.info("----Contact Updated --- for (ID):" + mainDocument.getID());
 
         } catch (Exception e) {
             log.error("Exception Caught");

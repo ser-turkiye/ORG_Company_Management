@@ -13,6 +13,11 @@ import java.util.*;
 
 public class ContractorManagement extends UnifiedAgent {
     private Logger log = LogManager.getLogger();
+    String prjCode = "";
+    String compShortName = "";
+    String compName = "";
+    String paramName = "";
+    String compIsMain = "";
     @Override
     protected Object execute() {
         ISession ses = this.getSes();
@@ -22,15 +27,29 @@ public class ContractorManagement extends UnifiedAgent {
             mainDocument = getEventDocument();
             log.info("----OnChangeProjectCard Started ---for IDocument ID:--" + mainDocument.getID());
 
-            updateMembers2GVList("CCM_PARAM_CONTRACTOR-MEMBERS", mainDocument.getDescriptorValue("ccmPRJCard_code"), mainDocument);
-            log.info("----OnChangeProjectCard Updated Project Members GVList ---for (ID):" + mainDocument.getID());
+            paramName       = "CCM_PARAM_CONTRACTOR-MEMBERS";
+            prjCode         = mainDocument.getDescriptorValue("ccmPRJCard_code");
+            compName        = mainDocument.getDescriptorValue("ObjectName");
+            compShortName   = mainDocument.getDescriptorValue("ContactShortName");
+            compIsMain      = mainDocument.getDescriptorValue("ccmPRJCard_status");
 
-            updateUnit(mainDocument.getDescriptorValue("ccmPRJCard_code"), mainDocument.getDescriptorValue("ContactShortName"),getMembersFromGVlist(mainDocument,"CCM_PARAM_CONTRACTOR-MEMBERS"));
-            log.info("----OnChangeProjectCard updated Units ---for IDocument ID:--" + mainDocument.getID());
+///--- MY (MAIN) COMPANY ISE UPDATE YAPILMAYACAK
+            if(!Objects.equals(compIsMain, "1")) {
+                if(prjCode == null || prjCode == ""){
+                    throw new Exception("Exeption Caught...prjCode is NULL or EMPTY");
+                }
+                if(compName == null || compName == ""){
+                    throw new Exception("Exeption Caught..contractor Name is NULL or EMPTY");
+                }
+                updateMembers2GVList(mainDocument);
+                log.info("----Contractor Updated Project Members GVList ---for (ID):" + mainDocument.getID());
 
-            updateRole(mainDocument,"CCM_PARAM_CONTRACTOR-MEMBERS",getMembersFromGVlist(mainDocument,"CCM_PARAM_CONTRACTOR-MEMBERS"));
-            log.info("----OnChangeProjectCard Updated Roles from ProjectCard ---for (ID):" + mainDocument.getID());
+                updateUnit(getMembersFromGVlist());
+                log.info("----Contractor updated Units ---for IDocument ID:--" + mainDocument.getID());
 
+                updateRole(getMembersFromGVlist());
+                log.info("----Contractor Updated Roles from ProjectCard ---for (ID):" + mainDocument.getID());
+            }
         } catch (Exception e) {
             log.error("Exception Caught");
             log.error(e.getMessage());
@@ -73,7 +92,7 @@ public class ContractorManagement extends UnifiedAgent {
             throw new Exception("Exeption Caught..updatePrjCardGVList: " + e);
         }
     }
-    public void updateMembers2GVList(String paramName, String paramKey, IDocument doc) throws Exception {
+    public void updateMembers2GVList(IDocument doc) throws Exception {
         try {
             String ToReceiver = doc.getDescriptorValue("To-Receiver");
             String CcReceiver = doc.getDescriptorValue("CC-Receiver");
@@ -85,8 +104,6 @@ public class ContractorManagement extends UnifiedAgent {
             String[] membersToReceiverIDs = new String[0];
             String[] membersCcReceiverIDs = new String[0];
             String[] membersOuthorIDs = new String[0];
-
-            String prjCode = (ToReceiver != null ? doc.getDescriptorValue("ccmPRJCard_code") : "");
 
             if(ToReceiver != null) {
                 membersTo = ToReceiver.replace("[", "").replace("]", "");
@@ -106,7 +123,7 @@ public class ContractorManagement extends UnifiedAgent {
             memberList.addAll(Arrays.asList(membersCcReceiverIDs));
             memberList.addAll(Arrays.asList(membersOuthorIDs));
 
-            boolean isRemove = removeByPrjCodeFromGVList(paramName, prjCode);
+            boolean isRemove = removeByPrjCodeFromGVList();
 
             int rowCount = 0;
             if(!memberList.isEmpty()) {
@@ -119,9 +136,9 @@ public class ContractorManagement extends UnifiedAgent {
                     srtMatrixModify.commit();
                     settingsMatrix.refresh();
                     rowCount = settingsMatrix.getRowCount()-1;
-                    srtMatrixModify.setValue(rowCount, 0, doc.getDescriptorValue("ccmPRJCard_code"), false);
-                    srtMatrixModify.setValue(rowCount, 1, doc.getDescriptorValue("ContactShortName"), false);
-                    srtMatrixModify.setValue(rowCount, 2, doc.getDescriptorValue("ObjectName"), false);
+                    srtMatrixModify.setValue(rowCount, 0, prjCode, false);
+                    srtMatrixModify.setValue(rowCount, 1, compShortName, false);
+                    srtMatrixModify.setValue(rowCount, 2, compName, false);
                     srtMatrixModify.setValue(rowCount, 3, mmbr.getFullName(), false);
                     srtMatrixModify.setValue(rowCount, 4, memberName, false);
                     srtMatrixModify.setValue(rowCount, 5, mmbr.getID(), false);
@@ -132,16 +149,18 @@ public class ContractorManagement extends UnifiedAgent {
             throw new Exception("Exeption Caught..updatePrjCardMembers2GVList: " + e);
         }
     }
-    public boolean removeByPrjCodeFromGVList(String paramName, String paramKey){
+    public boolean removeByPrjCodeFromGVList(){
         IStringMatrix settingsMatrix = getDocumentServer().getStringMatrix(paramName, getSes());
         String rowValuePrjCode = "";
+        String rowValueCompSName = "";
         IStringMatrixModifiable srtMatrixModify = settingsMatrix.getModifiableCopy(getSes());
         for(int i = 0; i < srtMatrixModify.getRowCount(); i++) {
             rowValuePrjCode = srtMatrixModify.getValue(i, 0);
-            if (rowValuePrjCode.equalsIgnoreCase(paramKey)) {
+            rowValueCompSName = srtMatrixModify.getValue(i, 1);
+            if (rowValuePrjCode.equalsIgnoreCase(prjCode) && rowValueCompSName.equalsIgnoreCase(compShortName)) {
                 srtMatrixModify.removeRow(i);
                 srtMatrixModify.commit();
-                if(removeByPrjCodeFromGVList(paramName, paramKey)){break;}
+                if(removeByPrjCodeFromGVList()){break;}
             }
         }
         return true;
@@ -158,7 +177,7 @@ public class ContractorManagement extends UnifiedAgent {
         }
         return rtrn;
     }
-    public void updateRole(IDocument doc, String paramName, List<String> members) throws Exception {
+    public void updateRole(List<String> members) throws Exception {
         try {
             //IRole dccRole = getSes().getDocumentServer().getRoleByName(getSes(),Conf.RoleNames.DCCUsersRole);
             IRole prjRole = getSes().getDocumentServer().getRoleByName(getSes(),Conf.RoleNames.ContractorUsersRole);
@@ -196,17 +215,12 @@ public class ContractorManagement extends UnifiedAgent {
             throw new Exception("Exeption Caught..updateRole: " + e);
         }
     }
-    public void updateUnit(String prjCode, String contractName, List<String> members) throws Exception {
+    public void updateUnit(List<String> members) throws Exception {
         try {
             List<String> prjUnitUserIDs = new ArrayList<>();
             ISerClassFactory classFactory = getDocumentServer().getClassFactory();
-            if(prjCode == null || prjCode == ""){
-                throw new Exception("Exeption Caught..updateUnitsByPrjCard..prjCode is NULL or EMPTY");
-            }
-            if(contractName == null || contractName == ""){
-                throw new Exception("Exeption Caught..updateUnitsByPrjCard..contractName is NULL or EMPTY");
-            }
-            String unitName = prjCode + "_" + contractName;
+
+            String unitName = prjCode + "_" + compShortName;
             IUnit unit = getDocumentServer().getUnitByName(getSes(), unitName);
             IUnit punit = getDocumentServer().getUnitByName(getSes(), prjCode);
             if(punit != null){
@@ -320,7 +334,7 @@ public class ContractorManagement extends UnifiedAgent {
             throw new Exception("Exeption Caught..removeFromUnit : " + e);
         }
     }
-    public List<String> getMembersFromGVlist(IDocument doc, String paramName) throws Exception {
+    public List<String> getMembersFromGVlist() throws Exception {
         List<String> prjUsers = new ArrayList<>();
 
         IRole prjRole = getSes().getDocumentServer().getRoleByName(getSes(),Conf.RoleNames.ContractorUsersRole);
