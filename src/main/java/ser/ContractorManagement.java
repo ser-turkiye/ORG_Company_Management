@@ -44,7 +44,7 @@ public class ContractorManagement extends UnifiedAgent {
                 updateMembers2GVList(mainDocument);
                 log.info("----Contractor Updated Project Members GVList ---for (ID):" + mainDocument.getID());
 
-                updateUnit(getMembersFromGVlist());
+                updateUnit(getContractorMembersFromGVlist(compShortName));
                 log.info("----Contractor updated Units ---for IDocument ID:--" + mainDocument.getID());
 
                 updateRole(getMembersFromGVlist());
@@ -348,6 +348,25 @@ public class ContractorManagement extends UnifiedAgent {
             for (int i = 0; i < settingsMatrix.getRowCount(); i++) {
                 String userId = settingsMatrix.getValue(i, 5);
                 prjUsers.add(userId);
+            }
+        }
+        return prjUsers;
+    }
+    public List<String> getContractorMembersFromGVlist(String contractorName) throws Exception {
+        List<String> prjUsers = new ArrayList<>();
+        IRole prjRole = getSes().getDocumentServer().getRoleByName(getSes(),Conf.RoleNames.ContractorUsersRole);
+        if(prjRole == null){
+            throw new Exception("Exeption Caught..updateRolesFromGVList..prjRole is NULL");
+        }
+        IStringMatrix settingsMatrix = getDocumentServer().getStringMatrix(paramName, getSes());
+        if(settingsMatrix!=null) {
+            for (int i = 0; i < settingsMatrix.getRowCount(); i++) {
+                String rowValuePrjCode = settingsMatrix.getValue(i, 0);
+                String rowValueCompSName = settingsMatrix.getValue(i, 1);
+                if (rowValuePrjCode.equalsIgnoreCase(prjCode) && rowValueCompSName.equalsIgnoreCase(contractorName)) {
+                    String userId = settingsMatrix.getValue(i, 5);
+                    prjUsers.add(userId);
+                }
             }
         }
         return prjUsers;
