@@ -24,9 +24,9 @@ class ExampleTests {
     @Test
     void testForAgentResult() {
 
-        def agent = new InvolvePartiesManagement();
+        def agent = new ContactManagement();
 
-        binding["AGENT_EVENT_OBJECT_CLIENT_ID"] = "SR0aPRJ_FOLDER247b5d3964-787b-43da-97e8-e93273556b89182023-12-18T20:46:29.868Z011"
+        binding["AGENT_EVENT_OBJECT_CLIENT_ID"] = "SR04BPWS24c3f09e4d-d7ea-40ea-91c4-7bf4bb2fd443182023-12-20T12:14:41.810Z011"
 
         def result = (AgentExecutionResult)agent.execute(binding.variables)
         System.out.println(result)

@@ -1,6 +1,8 @@
 package ser;
 
 import com.ser.blueline.*;
+import com.ser.blueline.bpm.IBpmService;
+import com.ser.blueline.bpm.IWorkbasket;
 import com.ser.blueline.metaDataComponents.IStringMatrix;
 import com.ser.blueline.modifiablemetadata.IStringMatrixModifiable;
 import com.ser.foldermanager.IFolder;
@@ -21,6 +23,8 @@ public class ContactManagement extends UnifiedAgent {
         ISession ses = this.getSes();
         IDocumentServer srv = ses.getDocumentServer();
         ISerClassFactory classFactory = srv.getClassFactory();
+        IBpmService bpmService = ses.getBpmService();
+
         IDocument mainDocument = null;
         try {
             mainDocument = getEventDocument();
@@ -42,6 +46,11 @@ public class ContactManagement extends UnifiedAgent {
                 cuser.setLastName(mainDocument.getDescriptorValue("PersonLastName"));
                 cuser.setEMailAddress(loginName);
                 cuser.commit();
+                IWorkbasket wb = bpmService.getWorkbasketByAssociatedOrgaElement((IOrgaElement) cuser);
+                if(wb == null) {
+                    wb = bpmService.createWorkbasketObject((IOrgaElement) cuser);
+                    wb.commit();
+                }
                 if(unit != null){
                     addToUnit(cuser,unit.getID());
                     log.info("add user:" + cuser.getFullName() + " to unit " + unitName);
