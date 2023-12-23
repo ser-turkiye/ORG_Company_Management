@@ -1,5 +1,6 @@
 package ser;
 
+import ser.ProcessHelper;
 import com.ser.blueline.*;
 import com.ser.blueline.bpm.*;
 import com.ser.blueline.metaDataComponents.IArchiveClass;
@@ -21,7 +22,6 @@ public class ProcessHelper {
         this.session = session;
         this.documentServer = session.getDocumentServer();
     }
-
 
     public IProcessInstance buildNewProcessInstanceForID(String id){
         try{
@@ -47,7 +47,6 @@ public class ProcessHelper {
             return null;
         }
     }
-
     public boolean mapDescriptorsFromObjectToObject(IInformationObject srcObject , IInformationObject targetObject , boolean overwriteValues){
         log.info("Mapping Descriptors from PInformation to Information Object");
         String[] targeObjectAssignedDesc;
@@ -99,31 +98,12 @@ public class ProcessHelper {
         }
         return true;
     }
-
-    public IInformationObject[] createQuery(String[] dbNames , String whereClause , int maxHits){
-        String[] databaseNames = dbNames;
-
-        ISerClassFactory fac = documentServer.getClassFactory();
-        IQueryParameter que = fac.getQueryParameterInstance(
-                session ,
-                databaseNames ,
-                fac.getExpressionInstance(whereClause) ,
-                null,null);
-        que.setMaxHits(maxHits);
-        que.setHitLimit(maxHits + 1);
-        que.setHitLimitThreshold(maxHits + 1);
-        IDocumentHitList hits = que.getSession() != null? que.getSession().getDocumentServer().query(que, que.getSession()):null;
-        if(hits == null) return null;
-        else return hits.getInformationObjects();
-    }
-
     public String getDocumentURL(String documentID){
         StringBuilder webcubeUrl = new StringBuilder();
         webcubeUrl.append("?system=").append(session.getSystem().getName());
         webcubeUrl.append("&action=showdocument&home=1&reusesession=1&id=").append(documentID);
         return webcubeUrl.toString();
     }
-
     public String getTaskURL(String taskID){
         StringBuilder webcubeUrl = new StringBuilder();
         webcubeUrl.append("?system=").append(session.getSystem().getName());

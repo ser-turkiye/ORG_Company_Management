@@ -5,6 +5,7 @@ import ser.ContactManagement
 
 import org.junit.*
 import ser.ContractorManagement
+import ser.InvolvePartiesManagement
 
 class ExampleTests {
 
@@ -23,7 +24,7 @@ class ExampleTests {
     @Test
     void testForAgentResult() {
 
-        def agent = new ContractorManagement();
+        def agent = new InvolvePartiesManagement();
 
         binding["AGENT_EVENT_OBJECT_CLIENT_ID"] = "SR0aPRJ_FOLDER247b5d3964-787b-43da-97e8-e93273556b89182023-12-18T20:46:29.868Z011"
 
