@@ -49,6 +49,8 @@ public class ContactManagement extends UnifiedAgent {
                 IWorkbasket wb = bpmService.getWorkbasketByAssociatedOrgaElement((IOrgaElement) cuser);
                 if(wb == null) {
                     wb = bpmService.createWorkbasketObject((IOrgaElement) cuser);
+                    wb.setNotifyEMail(loginName);
+                    wb.setOwner(cuser);
                     wb.commit();
                 }
                 if(unit != null){

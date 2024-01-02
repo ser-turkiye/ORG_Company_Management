@@ -3,6 +3,7 @@ package ser;
 import com.ser.blueline.*;
 import com.ser.blueline.metaDataComponents.IStringMatrix;
 import com.ser.blueline.modifiablemetadata.IStringMatrixModifiable;
+import com.ser.foldermanager.IFolder;
 import de.ser.doxis4.agentserver.UnifiedAgent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -353,9 +354,10 @@ public class InvolvePartiesManagement extends UnifiedAgent {
         for(int i = 0; i < srtMatrixModify.getRowCount(); i++) {
             rowValuePrjCode = srtMatrixModify.getValue(i, 0);
             rowValueCompSName = srtMatrixModify.getValue(i, 1);
-            if (rowValuePrjCode.equalsIgnoreCase(prjCode) && rowValueCompSName.equalsIgnoreCase(compShortName)) {
+            if (rowValuePrjCode.equals(prjCode) && rowValueCompSName.equals(compShortName)) {
                 srtMatrixModify.removeRow(i);
                 srtMatrixModify.commit();
+                log.info("Removed Proje:" + rowValuePrjCode + " /// Comp:" + rowValueCompSName);
                 if(removeByPrjCodeFromGVList()){break;}
             }
         }
@@ -427,6 +429,7 @@ public class InvolvePartiesManagement extends UnifiedAgent {
                         IUser memberUser = getDocumentServer().getUser(getSes(), memberID);
                         if (memberUser != null) {
                             addToUnit(memberUser,unit.getID());
+                            memberUser.setPrimaryUnit(unit);
                             log.info("add user:" + memberUser.getFullName() + " to unit " + unitName);
                         }
                     }
