@@ -38,6 +38,7 @@ public class ContactManagement extends UnifiedAgent {
             IUser user = getDocumentServer().getUserByLoginName(getSes(),loginName);
             if(user == null){
                 user = classFactory.createUserInstance(getSes(),loginName,password);
+                user.commit();
             }
             if(user!=null) {
                 IUser cuser = user.getModifiableCopy(getSes());
@@ -49,9 +50,11 @@ public class ContactManagement extends UnifiedAgent {
                 IWorkbasket wb = bpmService.getWorkbasketByAssociatedOrgaElement((IOrgaElement) cuser);
                 if(wb == null) {
                     wb = bpmService.createWorkbasketObject((IOrgaElement) cuser);
-                    wb.setNotifyEMail(loginName);
-                    wb.setOwner(cuser);
                     wb.commit();
+                    IWorkbasket wbCopy = wb.getModifiableCopy(getSes());
+                    wbCopy.setNotifyEMail(loginName);
+                    wbCopy.setOwner(cuser);
+                    wbCopy.commit();
                 }
                 if(unit != null){
                     addToUnit(cuser,unit.getID());
