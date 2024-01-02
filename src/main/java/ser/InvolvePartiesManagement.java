@@ -429,7 +429,6 @@ public class InvolvePartiesManagement extends UnifiedAgent {
                         IUser memberUser = getDocumentServer().getUser(getSes(), memberID);
                         if (memberUser != null) {
                             addToUnit(memberUser,unit.getID());
-                            memberUser.setPrimaryUnit(unit);
                             log.info("add user:" + memberUser.getFullName() + " to unit " + unitName);
                         }
                     }
