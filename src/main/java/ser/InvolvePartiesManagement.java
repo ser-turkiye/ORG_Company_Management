@@ -47,7 +47,7 @@ public class InvolvePartiesManagement extends UnifiedAgent {
             updateUnit(getContractorMembersFromGVlist(compShortName));
             log.info("----Contractor updated Units ---for IDocument ID:--" + mainDocument.getID());
 
-            updateRole(getMembersFromGVlist());
+            updateRole();
             log.info("----Contractor Updated Roles from ProjectCard ---for (ID):" + mainDocument.getID());
 
             if(Objects.equals(compIsMain, "1")){
@@ -363,19 +363,25 @@ public class InvolvePartiesManagement extends UnifiedAgent {
         }
         return true;
     }
-    public void updateRole(List<String> members) throws Exception {
+    public void updateRole() throws Exception {
         try {
+            List<String> members = new ArrayList<>();
+            List<String> membersDcc = new ArrayList<>();
             String roleID = "";
             String roleIDDcc = "";
             if(Objects.equals(compIsMain, "1")){
-                roleID = Conf.ClassIDs.InternalProjectUsers;
-                roleIDDcc = Conf.ClassIDs.InternalDCC;
+                roleID = Conf.RoleNames.InternalProjectUsers;
+                roleIDDcc = Conf.RoleNames.InternalDCC;
+                members = getMembersByStatuFromGVlist(true);
+                membersDcc = getDccMembersByStatuFromGVlist(true);
             }else{
-                roleID = Conf.ClassIDs.ExternalProjectUsers;
-                roleIDDcc = Conf.ClassIDs.ExternalDCC;
+                roleID = Conf.RoleNames.ExternalProjectUsers;
+                roleIDDcc = Conf.RoleNames.ExternalDCC;
+                members = getMembersByStatuFromGVlist(false);
+                membersDcc = getDccMembersByStatuFromGVlist(false);
             }
-            IRole prjRole = getSes().getDocumentServer().getRole(getSes(),roleID);
-            IRole prjRoleDcc = getSes().getDocumentServer().getRole(getSes(),roleIDDcc);
+            IRole prjRole = getSes().getDocumentServer().getRoleByName(getSes(),roleID);
+            IRole prjRoleDcc = getSes().getDocumentServer().getRoleByName(getSes(),roleIDDcc);
 
             if(prjRole == null || prjRoleDcc == null){
                 throw new Exception("Exeption Caught..updateRole..prjRole or RoleDcc is NULL");
@@ -395,6 +401,35 @@ public class InvolvePartiesManagement extends UnifiedAgent {
                             addToRole(user, prjRole.getID());
                         }
                     }
+                }
+            }
+
+            List<String> prjRoleUserIDs = new ArrayList<>();
+            IUser[] prjRoleMembers = prjRole.getUserMembers();
+            if (prjRoleMembers != null) {
+                for (IUser pMember : prjRoleMembers) {
+                    prjRoleUserIDs.add(pMember.getID());
+                }
+            }
+            for (String prjUserID : prjRoleUserIDs) {
+                IUser prjRoleUser = getDocumentServer().getUser(getSes(), prjUserID);
+                if (!members.contains(prjUserID)) {
+                    removeFromRole(prjRoleUser,prjRole.getID());
+                    log.info("removed user:" + prjRoleUser.getFullName() + " from role:" + prjRole.getName());
+                }
+            }
+            List<String> prjRoleDccUserIDs = new ArrayList<>();
+            IUser[] prjRoleDccMembers = prjRoleDcc.getUserMembers();
+            if (prjRoleDccMembers != null) {
+                for (IUser pMember : prjRoleDccMembers) {
+                    prjRoleDccUserIDs.add(pMember.getID());
+                }
+            }
+            for (String prjUserDccID : prjRoleDccUserIDs) {
+                IUser prjRoleDccUser = getDocumentServer().getUser(getSes(), prjUserDccID);
+                if (!membersDcc.contains(prjUserDccID)) {
+                    removeFromRole(prjRoleDccUser,prjRoleDcc.getID());
+                    log.info("removed user:" + prjRoleDccUser.getFullName() + " from role:" + prjRoleDcc.getName());
                 }
             }
         }catch (Exception e){
@@ -542,6 +577,50 @@ public class InvolvePartiesManagement extends UnifiedAgent {
                     String userId = settingsMatrix.getValue(i, 5);
                     prjUsers.add(userId);
                 }
+            }
+        }
+        return prjUsers;
+    }
+    public List<String> getMembersByStatuFromGVlist(boolean isMainMembers) throws Exception {
+        List<String> prjUsers = new ArrayList<>();
+        IStringMatrix settingsMatrix = getDocumentServer().getStringMatrix(paramName, getSes());
+        if(settingsMatrix!=null) {
+            for (int i = 0; i < settingsMatrix.getRowCount(); i++) {
+                String rowValuePrjCode = settingsMatrix.getValue(i, 0);
+                String rowValueCompSName = settingsMatrix.getValue(i, 1);
+                String rowValueParamMainComp = settingsMatrix.getValue(i, 7);
+
+                if (isMainMembers){
+                    if(!Objects.equals(rowValueParamMainComp, "1")){continue;}
+                }else {
+                    if(Objects.equals(rowValueParamMainComp, "1")){continue;}
+                }
+
+                String userId = settingsMatrix.getValue(i, 5);
+                prjUsers.add(userId);
+
+            }
+        }
+        return prjUsers;
+    }
+    public List<String> getDccMembersByStatuFromGVlist(boolean isMainMembers) throws Exception {
+        List<String> prjUsers = new ArrayList<>();
+        IStringMatrix settingsMatrix = getDocumentServer().getStringMatrix(paramName, getSes());
+        if(settingsMatrix!=null) {
+            for (int i = 0; i < settingsMatrix.getRowCount(); i++) {
+                String rowValuePrjCode = settingsMatrix.getValue(i, 0);
+                String rowValueCompSName = settingsMatrix.getValue(i, 1);
+                String rowValueParamMainComp = settingsMatrix.getValue(i, 7);
+                String rowValueParamDCC = settingsMatrix.getValue(i, 6);
+                if (!Objects.equals(rowValueParamDCC, "DCC")){continue;}
+
+                if (isMainMembers){
+                    if(!Objects.equals(rowValueParamMainComp, "1")){continue;}
+                }else {
+                    if(Objects.equals(rowValueParamMainComp, "1")){continue;}
+                }
+                String userId = settingsMatrix.getValue(i, 5);
+                prjUsers.add(userId);
             }
         }
         return prjUsers;

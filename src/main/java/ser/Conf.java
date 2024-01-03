@@ -70,8 +70,10 @@ public class Conf {
         public static final String ProjectWorkspace = "32e74338-d268-484d-99b0-f90187240549";
         public static final String ExternalProjectUsers = "f59d2677-6fb5-4651-9666-0e555b45dc36";
         public static final String InternalProjectUsers = "7c191f7d-f3f7-4743-b913-08139a5769e1";
+        //public static final String InternalProjectUsers = "2b805cf3-b3d2-424c-af6f-e965bab955a0";
         public static final String ExternalDCC = "72e4b44c-db04-44a2-9407-7c9d10aac4e2";
         public static final String InternalDCC = "c4a7c6eb-877e-40d6-89dd-3b47a8a1ea20";
+        //public static final String InternalDCC = "12340051-3529-4df9-bdcb-bc5fabbfff9b";
     }
 
     public static class RoleNames{
@@ -79,6 +81,10 @@ public class Conf {
         public static final String PRJUsersRole = "Project Users";
         public static final String ContractorUsersRole = "Contractor Users";
         public static final String ExternalUsersUnit = "ExternalReader";
+        public static final String ExternalProjectUsers = "External Project Users";
+        public static final String InternalProjectUsers = "Internal Project Users";
+        public static final String ExternalDCC = "External DCC";
+        public static final String InternalDCC = "Internal DCC";
     }
 
 
