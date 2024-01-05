@@ -88,6 +88,12 @@ public class InvolvePartiesManagement extends UnifiedAgent {
             }else{
                 prjCardDoc.setDescriptorValue("ccmPrjCardUsers", "");
             }
+            if(Objects.equals(compIsMain, "1")) {
+                IUnit unit = getDocumentServer().getUnitByName(getSes(), prjCode);
+                if (unit != null) {
+                    prjCardDoc.setDescriptorValue("AbacOrgaRead", unit.getID());
+                }
+            }
             prjCardDoc.commit();
 
         }catch (Exception e){

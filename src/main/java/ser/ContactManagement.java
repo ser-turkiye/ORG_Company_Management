@@ -24,7 +24,7 @@ public class ContactManagement extends UnifiedAgent {
         IDocumentServer srv = ses.getDocumentServer();
         ISerClassFactory classFactory = srv.getClassFactory();
         IBpmService bpmService = ses.getBpmService();
-
+        boolean res = false;
         IDocument mainDocument = null;
         try {
             mainDocument = getEventDocument();
@@ -57,7 +57,7 @@ public class ContactManagement extends UnifiedAgent {
                     wbCopy.setOwner(cuser);
                     IRole admRole = getSes().getDocumentServer().getRoleByName(getSes(),"admins");
                     if(admRole != null) {
-                        wbCopy.addAccessibleBy(admRole);
+                       res = wbCopy.addAccessibleBy(admRole);
                     }
                     wbCopy.commit();
                 }
