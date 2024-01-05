@@ -47,6 +47,7 @@ public class ContactManagement extends UnifiedAgent {
                 cuser.setLastName(mainDocument.getDescriptorValue("PersonLastName"));
                 cuser.setEMailAddress(loginName);
                 cuser.commit();
+                log.info("External user created:" + cuser.getFullName());
                 IWorkbasket wb = bpmService.getWorkbasketByAssociatedOrgaElement((IOrgaElement) cuser);
                 if(wb == null) {
                     wb = bpmService.createWorkbasketObject((IOrgaElement) cuser);
@@ -54,6 +55,10 @@ public class ContactManagement extends UnifiedAgent {
                     IWorkbasket wbCopy = wb.getModifiableCopy(getSes());
                     wbCopy.setNotifyEMail(loginName);
                     wbCopy.setOwner(cuser);
+                    IRole admRole = getSes().getDocumentServer().getRoleByName(getSes(),"admins");
+                    if(admRole != null) {
+                        wbCopy.addAccessibleBy(admRole);
+                    }
                     wbCopy.commit();
                 }
                 if(unit != null){
@@ -61,6 +66,7 @@ public class ContactManagement extends UnifiedAgent {
                     log.info("add user:" + cuser.getFullName() + " to unit " + unitName);
                 }
             }
+            ses.refreshServerSessionCache();
             log.info("----Contact Updated --- for (User):" + loginName);
             log.info("----Contact Updated --- for (ID):" + mainDocument.getID());
 

@@ -382,10 +382,10 @@ public class InvolvePartiesManagement extends UnifiedAgent {
             }
             IRole prjRole = getSes().getDocumentServer().getRoleByName(getSes(),roleID);
             IRole prjRoleDcc = getSes().getDocumentServer().getRoleByName(getSes(),roleIDDcc);
-
             if(prjRole == null || prjRoleDcc == null){
                 throw new Exception("Exeption Caught..updateRole..prjRole or RoleDcc is NULL");
             }
+            log.info("Add Role Names :" + prjRole.getName() + " /// " + prjRoleDcc.getName());
 
             IStringMatrix settingsMatrix = getDocumentServer().getStringMatrix(paramName, getSes());
             if(settingsMatrix!=null) {
@@ -498,6 +498,7 @@ public class InvolvePartiesManagement extends UnifiedAgent {
                 String[] newRoleIDs = rtrn.toArray(new String[0]);
                 cuser.setRoleIDs(newRoleIDs);
                 cuser.commit();
+                log.info("Add to Role...User:" + cuser.getFullName() + " to ROLE (ID):" + roleID);
             }
         }catch (Exception e){
             throw new Exception("Exeption Caught..addToRole : " + e);
