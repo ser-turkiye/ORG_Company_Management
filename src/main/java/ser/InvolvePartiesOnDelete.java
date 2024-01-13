@@ -3,6 +3,7 @@ package ser;
 import com.ser.blueline.*;
 import com.ser.blueline.metaDataComponents.IStringMatrix;
 import com.ser.blueline.modifiablemetadata.IStringMatrixModifiable;
+import com.ser.foldermanager.IFolder;
 import de.ser.doxis4.agentserver.UnifiedAgent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,9 +22,10 @@ public class InvolvePartiesOnDelete extends UnifiedAgent {
     String compIsMain = "";
     @Override
     protected Object execute() {
-        IDocument mainDocument = null;
+        //IDocument mainDocument = null;
+        IFolder mainDocument = null;
         try {
-            mainDocument = getEventDocument();
+            mainDocument = getEventFolder();
             log.info("----OnChangeProjectCard Started ---for IDocument ID:--" + mainDocument.getID());
 
             paramName       = "CCM_PARAM_CONTRACTOR-MEMBERS";
@@ -121,7 +123,7 @@ public class InvolvePartiesOnDelete extends UnifiedAgent {
             throw new Exception("Exeption Caught..updateUnit: " + e);
         }
     }
-    public void updateProjectCard(IDocument doc) throws Exception {
+    public void updateProjectCard(IFolder doc) throws Exception {
         try {
             IDocument prjCardDoc = getProjectCard(prjCode);
             if(prjCardDoc==null){
@@ -137,7 +139,7 @@ public class InvolvePartiesOnDelete extends UnifiedAgent {
             throw new Exception("Exeption Caught..updatePrjCardMembers2GVList: " + e);
         }
     }
-    public void updateMembers2GVList(IDocument doc) throws Exception {
+    public void updateMembers2GVList(IFolder doc) throws Exception {
         try {
             String managerID = doc.getDescriptorValue("ccmPRJCard_EngMng");
             String managerName = getUserByWB(managerID);

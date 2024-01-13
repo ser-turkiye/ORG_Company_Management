@@ -58,6 +58,7 @@ public class Conf {
 
     public static class ClassIDs{
         public static final String ProjectCard = "32e74338-d268-484d-99b0-f90187240549";
+        public static final String InvolveParty = "fad93754-b7c2-4a12-b40e-8afae3b31e3d";
         public static final String EngineeringDocument = "3b3078f8-c0d0-4830-b963-88bebe1c1462";
         public static final String DCCExcelSheet = "3009009e-e563-400e-8fdb-e0382ca0b011";
         public static final String ReviewSubProcess = "629a28c4-6c36-44d0-90f7-1e5802f038e8";

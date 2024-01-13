@@ -6,6 +6,7 @@ import ser.ContactManagement
 import org.junit.*
 import ser.ContractorManagement
 import ser.InvolvePartiesManagement
+import ser.InvolvePartiesOnDelete
 
 class ExampleTests {
 
@@ -24,9 +25,10 @@ class ExampleTests {
     @Test
     void testForAgentResult() {
 
-        def agent = new ContactManagement();
+        //def agent = new InvolvePartiesOnDelete();
+        def agent = new InvolvePartiesManagement();
 
-        binding["AGENT_EVENT_OBJECT_CLIENT_ID"] = "SR04BPWS24c3f09e4d-d7ea-40ea-91c4-7bf4bb2fd443182023-12-20T12:14:41.810Z011"
+        binding["AGENT_EVENT_OBJECT_CLIENT_ID"] = "SR0aPRJ_FOLDER24bccad3b4-096b-48c0-8c16-5c18d7e27cd6182024-01-04T14:41:16.898Z011"
 
         def result = (AgentExecutionResult)agent.execute(binding.variables)
         System.out.println(result)

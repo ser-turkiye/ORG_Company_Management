@@ -3,7 +3,7 @@ package ser;
 import com.ser.blueline.*;
 import com.ser.blueline.metaDataComponents.IStringMatrix;
 import com.ser.blueline.modifiablemetadata.IStringMatrixModifiable;
-import com.ser.foldermanager.IFolder;
+import com.ser.foldermanager.*;
 import de.ser.doxis4.agentserver.UnifiedAgent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,6 +15,11 @@ import java.util.Objects;
 
 public class InvolvePartiesManagement extends UnifiedAgent {
     private Logger log = LogManager.getLogger();
+
+    public ISession ses;
+
+    public  IDocument prjCardDoc;
+
     String prjCode = "";
     String compShortName = "";
     String compName = "";
@@ -26,29 +31,45 @@ public class InvolvePartiesManagement extends UnifiedAgent {
         IDocumentServer srv = ses.getDocumentServer();
         IDocument mainDocument = null;
         try {
+            ses.refreshServerSessionCache();
+
             mainDocument = getEventDocument();
             log.info("----OnChangeProjectCard Started ---for IDocument ID:--" + mainDocument.getID());
 
             paramName       = "CCM_PARAM_CONTRACTOR-MEMBERS";
             prjCode         = mainDocument.getDescriptorValue("ccmPRJCard_code");
-            compName        = mainDocument.getDescriptorValue("ObjectName");
-            compShortName   = mainDocument.getDescriptorValue("ContactShortName");
-            compIsMain      = mainDocument.getDescriptorValue("ccmPRJCard_status");
+
 
             if(prjCode == null || prjCode == ""){
                 throw new Exception("Exeption Caught...prjCode is NULL or EMPTY");
             }
-            if(compName == null || compName == ""){
-                throw new Exception("Exeption Caught..contractor Name is NULL or EMPTY");
+
+            prjCardDoc = getProjectCard(prjCode);
+            if(prjCardDoc==null){
+                throw new Exception("Exeption Caught.. prjCardDoc is NULL");
             }
-            updateMembers2GVList(mainDocument);
-            log.info("----Contractor Updated Project Members GVList ---for (ID):" + mainDocument.getID());
+
+            removeEntriesFromGVListByKey(prjCode);
+
+            IInformationObject[] informationObjects = getInvolvePartiesFromNode((IFolder) prjCardDoc, "Administration" ,"Involve Parties");
+
+
+            if(informationObjects==null){
+                return resultSuccess("There is no Involve Party Found for Project. Project Code : " + prjCode);
+            }
+
+            for(IInformationObject iObject:informationObjects){
+                    updateMembers2GVList(iObject);
+                    log.info("----Contractor Updated Project Members GVList ---for (ID):" + iObject.getID());
+            }
 
             updateUnit(getContractorMembersFromGVlist(compShortName));
             log.info("----Contractor updated Units ---for IDocument ID:--" + mainDocument.getID());
 
             updateRole();
             log.info("----Contractor Updated Roles from ProjectCard ---for (ID):" + mainDocument.getID());
+
+            compIsMain      = mainDocument.getDescriptorValue("ccmPRJCard_status");
 
             if(Objects.equals(compIsMain, "1")){
                 updateProjectCard(mainDocument);
@@ -63,10 +84,7 @@ public class InvolvePartiesManagement extends UnifiedAgent {
     }
     public void updateProjectCard(IDocument doc) throws Exception {
         try {
-            IDocument prjCardDoc = getProjectCard(prjCode);
-            if(prjCardDoc==null){
-                throw new Exception("Exeption Caught..updateProjectCard..prjCardDoc is NULL");
-            }
+
 
             if(doc.getDescriptorValue("ccmPRJCard_EngMng") != null) {
                 prjCardDoc.setDescriptorValue("ccmPRJCard_EngMng", doc.getDescriptorValue("ccmPRJCard_EngMng"));
@@ -100,8 +118,36 @@ public class InvolvePartiesManagement extends UnifiedAgent {
             throw new Exception("Exeption Caught..updatePrjCardMembers2GVList: " + e);
         }
     }
-    public void updateMembers2GVList(IDocument doc) throws Exception {
+
+
+    public void removeEntriesFromGVListByKey(String keyval){
+        IStringMatrix settingsMatrix = getDocumentServer().getStringMatrix(paramName, getSes());
+        IStringMatrixModifiable srtMatrixModify = getDocumentServer().getStringMatrix(paramName, getSes()).getModifiableCopy(getSes());
+
+
+        List<Integer> rows = new ArrayList<>();
+        for(int i=0;i< settingsMatrix.getRowCount() ;i++){
+            if(settingsMatrix.getRawValue(i,0).equals(keyval)) {
+                String curVal = settingsMatrix.getRawValue(i,0);
+                rows.add(i);
+            }
+        }
+
+        for (int i = rows.size()-1  ; i >=0 ; i--) {
+            srtMatrixModify.removeRow(rows.get(i));
+        }
+
+        srtMatrixModify.commit();
+
+    }
+
+    public void updateMembers2GVList(IInformationObject doc) throws Exception {
         try {
+            compName        = doc.getDescriptorValue("ObjectName");
+            compShortName   = doc.getDescriptorValue("ContactShortName");
+            compIsMain      = doc.getDescriptorValue("ccmPRJCard_status");
+
+
             String managerID = doc.getDescriptorValue("ccmPRJCard_EngMng");
             String managerName = getUserByWB(managerID);
             String pmanagerID = doc.getDescriptorValue("ccmPRJCard_prjmngr");
@@ -161,7 +207,7 @@ public class InvolvePartiesManagement extends UnifiedAgent {
             memberOthList.addAll(Arrays.asList(membersCcReceiverIDs));
             memberOthList.addAll(Arrays.asList(membersOuthorIDs));
 
-            boolean isRemove = removeByPrjCodeFromGVList();
+          //  boolean isRemove = removeByPrjCodeFromGVList();
 
             int rowCount = 0;
             if(!Objects.equals(managerName, "")) {
@@ -632,6 +678,51 @@ public class InvolvePartiesManagement extends UnifiedAgent {
         }
         return prjUsers;
     }
+
+
+    public IInformationObject[] getInvolvePartiesByCode(String prjNumber)  {
+        StringBuilder builder = new StringBuilder();
+        builder.append("TYPE = '").append(Conf.ClassIDs.InvolveParty).append("'")
+                .append(" AND ")
+                .append(Conf.DescriptorLiterals.PrjCardCode).append(" = '").append(prjNumber).append("'");
+        String whereClause = builder.toString();
+        System.out.println("Where Clause: " + whereClause);
+
+        IInformationObject[] informationObjects = createQuery(new String[]{Conf.Databases.ProjectCard} , whereClause , 1000);
+        if(informationObjects.length < 1) {return null;}
+        return informationObjects;
+    }
+
+    public IInformationObject[]  getInvolvePartiesFromNode(IFolder folder , String rootName, String nodeName) throws Exception {
+
+        if(folder == null){
+            throw new Exception("folder not found.");
+        }
+        List<INode> nodesByName = folder.getNodesByName(rootName);
+        if(nodesByName.isEmpty()){
+            throw new Exception(rootName + " Node not found.");
+        }
+        ses=getEventDocument().getSession();
+
+        List<IInformationObject> elements = new ArrayList<>();
+
+        INode iNode = nodesByName.get(0);
+        INodes root = (INodes) iNode.getChildNodes();
+        INode newNode = root.getItemByName(nodeName);
+        if(newNode != null) {
+            log.info("Find Node : " + newNode.getID() + " /// " + nodeName);
+
+            IElements nelements = newNode.getElements();
+            for(int i=0;i<nelements.getCount2();i++) {
+                elements.add(  ses.getDocumentServer().	getInformationObjectByID( nelements.getItem2(i).getLink() , ses ));
+
+            }
+
+        }
+
+        return elements.toArray(new IInformationObject[0]);
+    }
+
     public IDocument getProjectCard(String prjNumber)  {
         StringBuilder builder = new StringBuilder();
         builder.append("TYPE = '").append(Conf.ClassIDs.ProjectCard).append("'")
