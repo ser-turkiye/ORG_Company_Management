@@ -28,7 +28,7 @@ public class InvolvePartiesOnDelete extends UnifiedAgent {
         IFolder mainFolder = null;
         try {
             mainFolder = getEventFolder();
-            log.info("----OnDelete Contractor Started ---for mainFolder ID:--" + mainFolder.getID());
+            log.info("----OnDelete Contractor Started ---");
             paramName = "CCM_PARAM_CONTRACTOR-MEMBERS";
             IInformationObject[] projectCards = getProjectCards("Active");
             for(IInformationObject projectCard : projectCards){
