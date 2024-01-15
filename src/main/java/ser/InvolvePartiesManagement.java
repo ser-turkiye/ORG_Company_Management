@@ -439,16 +439,14 @@ public class InvolvePartiesManagement extends UnifiedAgent {
                     if(Objects.equals(compIsMain, "1")){continue;}
                     String unitName = prjCode + "_" + compShortName;
                     unitNames.add(unitName);
+                    updateUnit(getContractorMembersFromGVlist(compShortName));
+                    log.info("----Updated Unit ---for :--" + unitName);
                 }
                 IUnit[] subUnits = mainPrjUnit.getUnitMembers();
                 for(IUnit sUnit : subUnits){
                     if(!unitNames.contains(sUnit.getName())){
                         getSes().getDocumentServer().deleteUnit(getSes(), sUnit);
                         log.info("removed sub unit:" + sUnit.getName() + " from main unit:" + mainPrjUnit.getName());
-                    }else{
-                        compShortName = sUnit.getName().split("_")[1];
-                        updateUnit(getContractorMembersFromGVlist(compShortName));
-                        log.info("----Updated Unit ---for :--" + sUnit.getName());
                     }
                 }
             }else{
