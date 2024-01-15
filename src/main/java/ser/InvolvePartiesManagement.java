@@ -39,7 +39,6 @@ public class InvolvePartiesManagement extends UnifiedAgent {
 
             compName        = mainDocument.getDescriptorValue("ObjectName");
             compShortName   = mainDocument.getDescriptorValue("ContactShortName");
-            compIsMain      = mainDocument.getDescriptorValue("ccmPRJCard_status");
 
             if(prjCode == null || prjCode == ""){
                 throw new Exception("Exeption Caught...prjCode is NULL or EMPTY");
@@ -68,6 +67,7 @@ public class InvolvePartiesManagement extends UnifiedAgent {
             updateAllRoles();
             log.info("----Updated All Roles ---");
 
+            compIsMain = mainDocument.getDescriptorValue("ccmPRJCard_status");
             if(Objects.equals(compIsMain, "1")){
                 updateProjectCard(mainDocument);
             }
