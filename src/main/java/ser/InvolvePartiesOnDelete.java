@@ -66,7 +66,7 @@ public class InvolvePartiesOnDelete extends UnifiedAgent {
         }
         srtMatrixModify.commit();
     }
-    public IInformationObject[]  getInvolvePartiesFromNode(IFolder folder , String rootName, String nodeName) throws Exception {
+    public IInformationObject[] getInvolvePartiesFromNode(IFolder folder , String rootName, String nodeName) throws Exception {
         if(folder == null){
             throw new Exception("folder not found.");
         }
