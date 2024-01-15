@@ -39,7 +39,6 @@ public class InvolvePartiesManagement extends UnifiedAgent {
             paramName       = "CCM_PARAM_CONTRACTOR-MEMBERS";
             prjCode         = mainDocument.getDescriptorValue("ccmPRJCard_code");
 
-
             if(prjCode == null || prjCode == ""){
                 throw new Exception("Exeption Caught...prjCode is NULL or EMPTY");
             }
@@ -52,7 +51,6 @@ public class InvolvePartiesManagement extends UnifiedAgent {
             removeEntriesFromGVListByKey(prjCode);
 
             IInformationObject[] informationObjects = getInvolvePartiesFromNode((IFolder) prjCardDoc, "Administration" ,"Involve Parties");
-
 
             if(informationObjects==null){
                 return resultSuccess("There is no Involve Party Found for Project. Project Code : " + prjCode);
@@ -84,8 +82,6 @@ public class InvolvePartiesManagement extends UnifiedAgent {
     }
     public void updateProjectCard(IDocument doc) throws Exception {
         try {
-
-
             if(doc.getDescriptorValue("ccmPRJCard_EngMng") != null) {
                 prjCardDoc.setDescriptorValue("ccmPRJCard_EngMng", doc.getDescriptorValue("ccmPRJCard_EngMng"));
             }else{
@@ -118,12 +114,9 @@ public class InvolvePartiesManagement extends UnifiedAgent {
             throw new Exception("Exeption Caught..updatePrjCardMembers2GVList: " + e);
         }
     }
-
-
     public void removeEntriesFromGVListByKey(String keyval){
         IStringMatrix settingsMatrix = getDocumentServer().getStringMatrix(paramName, getSes());
         IStringMatrixModifiable srtMatrixModify = getDocumentServer().getStringMatrix(paramName, getSes()).getModifiableCopy(getSes());
-
 
         List<Integer> rows = new ArrayList<>();
         for(int i=0;i< settingsMatrix.getRowCount() ;i++){
@@ -136,17 +129,13 @@ public class InvolvePartiesManagement extends UnifiedAgent {
         for (int i = rows.size()-1  ; i >=0 ; i--) {
             srtMatrixModify.removeRow(rows.get(i));
         }
-
         srtMatrixModify.commit();
-
     }
-
     public void updateMembers2GVList(IInformationObject doc) throws Exception {
         try {
             compName        = doc.getDescriptorValue("ObjectName");
             compShortName   = doc.getDescriptorValue("ContactShortName");
             compIsMain      = doc.getDescriptorValue("ccmPRJCard_status");
-
 
             String managerID = doc.getDescriptorValue("ccmPRJCard_EngMng");
             String managerName = getUserByWB(managerID);

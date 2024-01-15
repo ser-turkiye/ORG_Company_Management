@@ -51,6 +51,7 @@ public class Conf {
         public static final String SubDocumentID = "SUBDOCUMENTREFERENCE";
 
         public static final String PrjCardCode = "CCMPRJCARD_CODE";
+        public static final String PRJCard_status = "CCMPRJCARD_STATUS";
         public static final String MainTaskReference = "MAINTASKREFERENCE";
         public static final String ObjectNumberExternal = "OBJECTNUMBER2";
 

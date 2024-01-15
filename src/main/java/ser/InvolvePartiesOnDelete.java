@@ -3,7 +3,10 @@ package ser;
 import com.ser.blueline.*;
 import com.ser.blueline.metaDataComponents.IStringMatrix;
 import com.ser.blueline.modifiablemetadata.IStringMatrixModifiable;
+import com.ser.foldermanager.IElements;
 import com.ser.foldermanager.IFolder;
+import com.ser.foldermanager.INode;
+import com.ser.foldermanager.INodes;
 import de.ser.doxis4.agentserver.UnifiedAgent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -11,7 +14,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
+import java.util.UUID;
 
 public class InvolvePartiesOnDelete extends UnifiedAgent {
     private Logger log = LogManager.getLogger();
@@ -22,38 +25,24 @@ public class InvolvePartiesOnDelete extends UnifiedAgent {
     String compIsMain = "";
     @Override
     protected Object execute() {
-        //IDocument mainDocument = null;
-        IFolder mainDocument = null;
+        IFolder mainFolder = null;
         try {
-            mainDocument = getEventFolder();
-            log.info("----OnChangeProjectCard Started ---for IDocument ID:--" + mainDocument.getID());
-
-            paramName       = "CCM_PARAM_CONTRACTOR-MEMBERS";
-            prjCode         = mainDocument.getDescriptorValue("ccmPRJCard_code");
-            compName        = mainDocument.getDescriptorValue("ObjectName");
-            compShortName   = mainDocument.getDescriptorValue("ContactShortName");
-            compIsMain      = mainDocument.getDescriptorValue("ccmPRJCard_status");
-
-            if(prjCode == null || prjCode == ""){
-                throw new Exception("Exeption Caught...prjCode is NULL or EMPTY");
+            mainFolder = getEventFolder();
+            log.info("----OnDelete Contractor Started ---for mainFolder ID:--" + mainFolder.getID());
+            paramName = "CCM_PARAM_CONTRACTOR-MEMBERS";
+            IInformationObject[] projectCards = getProjectCards("Active");
+            for(IInformationObject projectCard : projectCards){
+                prjCode = projectCard.getDescriptorValue("ccmPRJCard_code");
+                IInformationObject[] informationObjects = getInvolvePartiesFromNode((IFolder) projectCard, "Administration" ,"Involve Parties");
+                if(informationObjects==null){
+                    removeEntriesFromGVListByKey(prjCode);
+                }else {
+                    IInformationObject involveParty = informationObjects[0];
+                    involveParty.setDescriptorValue("ccmPrjDocName", UUID.randomUUID().toString());
+                    involveParty.commit();
+                    log.info("----Contractor Updated Project Members GVList ---for (ID):" + involveParty.getID());
+                }
             }
-            if(compName == null || compName == ""){
-                throw new Exception("Exeption Caught..contractor Name is NULL or EMPTY");
-            }
-
-            updateUnit();
-            log.info("----Contractor updated Units ---for IDocument ID:--" + mainDocument.getID());
-
-            updateRole();
-            log.info("----Contractor Updated Roles from ProjectCard ---for (ID):" + mainDocument.getID());
-
-            updateMembers2GVList(mainDocument);
-            log.info("----Contractor Updated Project Members GVList ---for (ID):" + mainDocument.getID());
-
-            if(Objects.equals(compIsMain, "1")){
-                updateProjectCard(mainDocument);
-            }
-
         } catch (Exception e) {
             log.error("Exception Caught");
             log.error(e.getMessage());
@@ -61,312 +50,57 @@ public class InvolvePartiesOnDelete extends UnifiedAgent {
         }
         return resultSuccess("Agent Finished Succesfully");
     }
-    public void updateRole() throws Exception {
-        try {
-            List<String> members = new ArrayList<>();
-            List<String> membersDcc = new ArrayList<>();
-            String roleID = "";
-            String roleIDDcc = "";
-            if(Objects.equals(compIsMain, "1")){
-                roleID = Conf.RoleNames.InternalProjectUsers;
-                roleIDDcc = Conf.RoleNames.InternalDCC;
-                members = getMembersByStatuFromGVlist(true);
-                membersDcc = getDccMembersByStatuFromGVlist(true);
-            }else{
-                roleID = Conf.RoleNames.ExternalProjectUsers;
-                roleIDDcc = Conf.RoleNames.ExternalDCC;
-                members = getMembersByStatuFromGVlist(false);
-                membersDcc = getDccMembersByStatuFromGVlist(false);
-            }
-            IRole prjRole = getSes().getDocumentServer().getRoleByName(getSes(),roleID);
-            IRole prjRoleDcc = getSes().getDocumentServer().getRoleByName(getSes(),roleIDDcc);
-            if(prjRole == null || prjRoleDcc == null){
-                throw new Exception("Exeption Caught..updateRole..prjRole or RoleDcc is NULL");
-            }
-            log.info("Remove Role Names :" + prjRole.getName() + " /// " + prjRoleDcc.getName());
-
-            IStringMatrix settingsMatrix = getDocumentServer().getStringMatrix(paramName, getSes());
-            if(settingsMatrix!=null) {
-                for (int i = 0; i < settingsMatrix.getRowCount(); i++) {
-                    String rowValuePrjCode = settingsMatrix.getValue(i, 0);
-                    String rowValueCompSName = settingsMatrix.getValue(i, 1);
-                    String userId = settingsMatrix.getValue(i, 5);
-                    String role = settingsMatrix.getValue(i, 6);
-                    if(!Objects.equals(rowValuePrjCode, prjCode)){continue;}
-                    if(!Objects.equals(rowValueCompSName, compShortName)){continue;}
-
-                    IUser user = getDocumentServer().getUser(getSes() , userId);
-                    if(user!=null) {
-                        if(Objects.equals(role, "DCC")) {
-                            removeFromRole(user, prjRoleDcc.getID());
-                            removeFromRole(user, prjRole.getID());
-                        }else{
-                            removeFromRole(user, prjRole.getID());
-                        }
-                    }
-                }
-            }
-        }catch (Exception e){
-            throw new Exception("Exeption Caught..updateRole: " + e);
-        }
-    }
-    public void updateUnit() throws Exception {
-        try {
-            IDocumentServer server = getSes().getDocumentServer();
-            String unitName = (Objects.equals(compIsMain, "1") ? prjCode : prjCode + "_" + compShortName);
-            IUnit unit = getDocumentServer().getUnitByName(getSes(), unitName);
-            if(unit != null){
-                ///remove unit
-                //server.deleteUnit(getSes(),unit);
-            }
-        }catch (Exception e){
-            throw new Exception("Exeption Caught..updateUnit: " + e);
-        }
-    }
-    public void updateProjectCard(IFolder doc) throws Exception {
-        try {
-            IDocument prjCardDoc = getProjectCard(prjCode);
-            if(prjCardDoc==null){
-                throw new Exception("Exeption Caught..updateProjectCard..prjCardDoc is NULL");
-            }
-            prjCardDoc.setDescriptorValue("ccmPRJCard_EngMng", "");
-            prjCardDoc.setDescriptorValue("ccmPRJCard_prjmngr", "");
-            prjCardDoc.setDescriptorValue("ccmPrjCard_DccList", "");
-            prjCardDoc.setDescriptorValue("ccmPrjCardUsers", "");
-            prjCardDoc.setDescriptorValue("AbacOrgaRead", "");
-            prjCardDoc.commit();
-        }catch (Exception e){
-            throw new Exception("Exeption Caught..updatePrjCardMembers2GVList: " + e);
-        }
-    }
-    public void updateMembers2GVList(IFolder doc) throws Exception {
-        try {
-            String managerID = doc.getDescriptorValue("ccmPRJCard_EngMng");
-            String managerName = getUserByWB(managerID);
-            String pmanagerID = doc.getDescriptorValue("ccmPRJCard_prjmngr");
-            String pmanagerName = getUserByWB(pmanagerID);
-            String dccMembers = doc.getDescriptorValue("ccmPrjCard_DccList");
-            String otherMembers = doc.getDescriptorValue("ccmPrjCardUsers");
-            String ToReceiver = doc.getDescriptorValue("To-Receiver");
-            String CcReceiver = doc.getDescriptorValue("CC-Receiver");
-            String ObjectAuthors = doc.getDescriptorValue("ObjectAuthors");
-            String membersD = "";
-            String membersOth = "";
-            String[] membersIDs = new String[0];
-            String[] membersOthIDs = new String[0];
-
-            String membersTo = "";
-            String membersCc = "";
-            String membersAuthors = "";
-            String[] membersToReceiverIDs = new String[0];
-            String[] membersCcReceiverIDs = new String[0];
-            String[] membersOuthorIDs = new String[0];
-
-            if(ToReceiver != null) {
-                membersTo = ToReceiver.replace("[", "").replace("]", "");
-                membersToReceiverIDs = membersTo.split(",");
-            }
-            if(CcReceiver != null) {
-                membersCc = CcReceiver.replace("[", "").replace("]", "");
-                membersCcReceiverIDs = membersCc.split(",");
-            }
-            if(ObjectAuthors != null) {
-                membersAuthors = ObjectAuthors.replace("[", "").replace("]", "");
-                membersOuthorIDs = membersAuthors.split(",");
-            }
-
-            List<String> memberList = new ArrayList<>();
-            List<String> memberOthList = new ArrayList<>();
-
-            if(dccMembers != null) {
-                membersD = doc.getDescriptorValue("ccmPrjCard_DccList").replace("[", "").replace("]", "");
-                membersIDs = membersD.split(",");
-            }
-            if(otherMembers != null) {
-                membersOth = doc.getDescriptorValue("ccmPrjCardUsers").replace("[", "").replace("]", "");
-                membersOthIDs = membersOth.split(",");
-            }
-
-            for (String memberID : membersIDs) {
-                String memberName = getUserByWB(memberID);
-                memberList.add(memberName);
-            }
-            for (String memberOthID : membersOthIDs) {
-                String memberLogin = getUserLoginByWB(memberOthID);
-                memberOthList.add(memberLogin);
-            }
-
-            memberOthList.addAll(Arrays.asList(membersToReceiverIDs));
-            memberOthList.addAll(Arrays.asList(membersCcReceiverIDs));
-            memberOthList.addAll(Arrays.asList(membersOuthorIDs));
-
-            boolean isRemove = removeByPrjCodeFromGVList();
-
-        }catch (Exception e){
-            throw new Exception("Exeption Caught..updatePrjCardMembers2GVList: " + e);
-        }
-    }
-    public String getUserByWB(String wbID){
-        String rtrn = "";
-        if(wbID != null) {
-            IStringMatrix settingsMatrix = getDocumentServer().getStringMatrixByID("Workbaskets", getSes());
-            for (int i = 0; i < settingsMatrix.getRowCount(); i++) {
-                String rowID = settingsMatrix.getValue(i, 0);
-                if (rowID.equalsIgnoreCase(wbID)) {
-                    rtrn = settingsMatrix.getValue(i, 2);
-                    break;
-                }
-            }
-        }
-        return rtrn;
-    }
-    public String getUserLoginByWB(String wbID){
-        String rtrn = "";
-        if(wbID != null) {
-            IStringMatrix settingsMatrix = getDocumentServer().getStringMatrixByID("Workbaskets", getSes());
-            for (int i = 0; i < settingsMatrix.getRowCount(); i++) {
-                String rowID = settingsMatrix.getValue(i, 0);
-                if (rowID.equalsIgnoreCase(wbID)) {
-                    rtrn = settingsMatrix.getValue(i, 1);
-                    break;
-                }
-            }
-        }
-        return rtrn;
-    }
-    public boolean removeByPrjCodeFromGVList(){
+    public void removeEntriesFromGVListByKey(String keyval){
         IStringMatrix settingsMatrix = getDocumentServer().getStringMatrix(paramName, getSes());
-        String rowValuePrjCode = "";
-        String rowValueCompSName = "";
-        IStringMatrixModifiable srtMatrixModify = settingsMatrix.getModifiableCopy(getSes());
-        for(int i = 0; i < srtMatrixModify.getRowCount(); i++) {
-            rowValuePrjCode = srtMatrixModify.getValue(i, 0);
-            rowValueCompSName = srtMatrixModify.getValue(i, 1);
-            if (rowValuePrjCode.equals(prjCode) && rowValueCompSName.equals(compShortName)) {
-                srtMatrixModify.removeRow(i);
-                srtMatrixModify.commit();
-                log.info("Removed Proje:" + rowValuePrjCode + " /// Comp:" + rowValueCompSName);
-                if(removeByPrjCodeFromGVList()){break;}
-            }
-        }
-        return true;
-    }
-    public void removeFromRole(IUser user, String roleID) throws Exception {
-        try {
-            getSes().refreshServerSessionCache();
-            String[] roleIDs = (user != null ? user.getRoleIDs() : null);
-            List<String> rtrn = new ArrayList<String>(Arrays.asList(roleIDs));
-            for (int i = 0; i < roleIDs.length; i++) {
-                String rID = roleIDs[i];
-                if (Objects.equals(rID, roleID)) {
-                    rtrn.remove(roleID);
-                }
-            }
-            IUser cuser = user.getModifiableCopy(getSes());
-            String[] newRoleIDs = rtrn.toArray(new String[0]);
-            cuser.setRoleIDs(newRoleIDs);
-            cuser.commit();
-        }catch (Exception e){
-            throw new Exception("Exeption Caught..removeFromRole : " + e);
-        }
-    }
-    public void removeFromUnit(IUser user, String unitID) throws Exception {
-        try {
-            String[] unitIDs = (user != null ? user.getUnitIDs() : null);
-            List<String> rtrn = new ArrayList<String>(Arrays.asList(unitIDs));
-            for (int i = 0; i < unitIDs.length; i++) {
-                String rID = unitIDs[i];
-                if (Objects.equals(rID, unitID)) {
-                    rtrn.remove(unitID);
-                }
-            }
-            IUser cuser = user.getModifiableCopy(getSes());
-            String[] newUnitIDs = rtrn.toArray(new String[0]);
-            cuser.setUnitIDs(newUnitIDs);
-            cuser.commit();
-        }catch (Exception e){
-            throw new Exception("Exeption Caught..removeFromUnit : " + e);
-        }
-    }
-    public List<String> getMembersFromGVlist() throws Exception {
-        List<String> prjUsers = new ArrayList<>();
-        IStringMatrix settingsMatrix = getDocumentServer().getStringMatrix(paramName, getSes());
-        if(settingsMatrix!=null) {
-            for (int i = 0; i < settingsMatrix.getRowCount(); i++) {
-                String userId = settingsMatrix.getValue(i, 5);
-                prjUsers.add(userId);
-            }
-        }
-        return prjUsers;
-    }
-    public List<String> getContractorMembersFromGVlist(String contractorName) throws Exception {
-        List<String> prjUsers = new ArrayList<>();
-        IStringMatrix settingsMatrix = getDocumentServer().getStringMatrix(paramName, getSes());
-        if(settingsMatrix!=null) {
-            for (int i = 0; i < settingsMatrix.getRowCount(); i++) {
-                String rowValuePrjCode = settingsMatrix.getValue(i, 0);
-                String rowValueCompSName = settingsMatrix.getValue(i, 1);
-                if (rowValuePrjCode.equalsIgnoreCase(prjCode) && rowValueCompSName.equalsIgnoreCase(compShortName)) {
-                    String userId = settingsMatrix.getValue(i, 5);
-                    prjUsers.add(userId);
-                }
-            }
-        }
-        return prjUsers;
-    }
-    public List<String> getMembersByStatuFromGVlist(boolean isMainMembers) throws Exception {
-        List<String> prjUsers = new ArrayList<>();
-        IStringMatrix settingsMatrix = getDocumentServer().getStringMatrix(paramName, getSes());
-        if(settingsMatrix!=null) {
-            for (int i = 0; i < settingsMatrix.getRowCount(); i++) {
-                String rowValuePrjCode = settingsMatrix.getValue(i, 0);
-                String rowValueCompSName = settingsMatrix.getValue(i, 1);
-                String rowValueParamMainComp = settingsMatrix.getValue(i, 7);
+        IStringMatrixModifiable srtMatrixModify = getDocumentServer().getStringMatrix(paramName, getSes()).getModifiableCopy(getSes());
 
-                if (isMainMembers){
-                    if(!Objects.equals(rowValueParamMainComp, "1")){continue;}
-                }else {
-                    if(Objects.equals(rowValueParamMainComp, "1")){continue;}
-                }
-                String userId = settingsMatrix.getValue(i, 5);
-                prjUsers.add(userId);
+        List<Integer> rows = new ArrayList<>();
+        for(int i=0;i< settingsMatrix.getRowCount() ;i++){
+            if(settingsMatrix.getRawValue(i,0).equals(keyval)) {
+                String curVal = settingsMatrix.getRawValue(i,0);
+                rows.add(i);
             }
         }
-        return prjUsers;
+        for (int i = rows.size()-1  ; i >=0 ; i--) {
+            srtMatrixModify.removeRow(rows.get(i));
+        }
+        srtMatrixModify.commit();
     }
-    public List<String> getDccMembersByStatuFromGVlist(boolean isMainMembers) throws Exception {
-        List<String> prjUsers = new ArrayList<>();
-        IStringMatrix settingsMatrix = getDocumentServer().getStringMatrix(paramName, getSes());
-        if(settingsMatrix!=null) {
-            for (int i = 0; i < settingsMatrix.getRowCount(); i++) {
-                String rowValuePrjCode = settingsMatrix.getValue(i, 0);
-                String rowValueCompSName = settingsMatrix.getValue(i, 1);
-                String rowValueParamMainComp = settingsMatrix.getValue(i, 7);
-                String rowValueParamDCC = settingsMatrix.getValue(i, 6);
-                if (!Objects.equals(rowValueParamDCC, "DCC")){continue;}
+    public IInformationObject[]  getInvolvePartiesFromNode(IFolder folder , String rootName, String nodeName) throws Exception {
+        if(folder == null){
+            throw new Exception("folder not found.");
+        }
+        List<INode> nodesByName = folder.getNodesByName(rootName);
+        if(nodesByName.isEmpty()){
+            throw new Exception(rootName + " Node not found.");
+        }
+        ISession ses = getSes();
 
-                if (isMainMembers){
-                    if(!Objects.equals(rowValueParamMainComp, "1")){continue;}
-                }else {
-                    if(Objects.equals(rowValueParamMainComp, "1")){continue;}
-                }
-                String userId = settingsMatrix.getValue(i, 5);
-                prjUsers.add(userId);
+        List<IInformationObject> elements = new ArrayList<>();
+
+        INode iNode = nodesByName.get(0);
+        INodes root = (INodes) iNode.getChildNodes();
+        INode newNode = root.getItemByName(nodeName);
+        if(newNode != null) {
+            log.info("Find Node : " + newNode.getID() + " /// " + nodeName);
+            IElements nelements = newNode.getElements();
+            for(int i=0;i<nelements.getCount2();i++) {
+                elements.add(ses.getDocumentServer().getInformationObjectByID(nelements.getItem2(i).getLink(), ses));
             }
         }
-        return prjUsers;
+        return elements.toArray(new IInformationObject[0]);
     }
-    public IDocument getProjectCard(String prjNumber)  {
+    public IInformationObject[] getProjectCards(String status)  {
         StringBuilder builder = new StringBuilder();
         builder.append("TYPE = '").append(Conf.ClassIDs.ProjectCard).append("'")
                 .append(" AND ")
-                .append(Conf.DescriptorLiterals.PrjCardCode).append(" = '").append(prjNumber).append("'");
+                .append(Conf.DescriptorLiterals.PRJCard_status).append(" = '").append(status).append("'");
         String whereClause = builder.toString();
         System.out.println("Where Clause: " + whereClause);
 
-        IInformationObject[] informationObjects = createQuery(new String[]{Conf.Databases.ProjectCard} , whereClause , 1);
+        IInformationObject[] informationObjects = createQuery(new String[]{Conf.Databases.ProjectCard} , whereClause , 1000);
         if(informationObjects.length < 1) {return null;}
-        return (IDocument) informationObjects[0];
+        return  informationObjects;
     }
     public IInformationObject[] createQuery(String[] dbNames , String whereClause , int maxHits){
         String[] databaseNames = dbNames;
