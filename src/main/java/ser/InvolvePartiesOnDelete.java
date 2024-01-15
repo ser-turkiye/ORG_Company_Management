@@ -1,6 +1,7 @@
 package ser;
 
 import com.ser.blueline.*;
+import com.ser.blueline.agents.IAgentExecutionObject;
 import com.ser.blueline.metaDataComponents.IStringMatrix;
 import com.ser.blueline.modifiablemetadata.IStringMatrixModifiable;
 import com.ser.foldermanager.IElements;
@@ -25,9 +26,7 @@ public class InvolvePartiesOnDelete extends UnifiedAgent {
     String compIsMain = "";
     @Override
     protected Object execute() {
-        IFolder mainFolder = null;
         try {
-            mainFolder = getEventFolder();
             log.info("----OnDelete Contractor Started ---");
             paramName = "CCM_PARAM_CONTRACTOR-MEMBERS";
             IInformationObject[] projectCards = getProjectCards("Active");
@@ -38,9 +37,12 @@ public class InvolvePartiesOnDelete extends UnifiedAgent {
                     removeEntriesFromGVListByKey(prjCode);
                 }else {
                     IInformationObject involveParty = informationObjects[0];
-                    involveParty.setDescriptorValue("ccmPrjDocName", UUID.randomUUID().toString());
-                    involveParty.commit();
-                    log.info("----Contractor Updated Project Members GVList ---for (ID):" + involveParty.getID());
+                    IAgentExecutionObject agent = getSes().getDocumentServer().createAgentExecutionObject(getSes(), "6d711a69-82aa-4e88-930e-c5f66b23c68b");
+                    if(agent != null){
+                        agent.setAgentEventObjectClientID(involveParty.getID());
+                        agent.execute();
+                    }
+                    log.info("----InvolvePartiesOnDelete...Changed InvolveParty:" + involveParty.getID());
                 }
             }
         } catch (Exception e) {
