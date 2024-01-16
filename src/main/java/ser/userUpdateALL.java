@@ -9,42 +9,43 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 
-public class userUpdate extends UnifiedAgent {
+public class userUpdateALL extends UnifiedAgent {
 
     private Logger log = LogManager.getLogger();
 
-    private IUser user;
-    private IUser userCopy;
+   private IUser user;
+   private IUser userCopy;
     private IWorkbasket workbasket;
 
     @Override
     protected Object execute() {
         log.info(" ---- Agent Started ----");
         try {
-            String userID = getEventInfObjID();
-            if (userID == null) return resultError("Info Object ID is NULL");
-            user = getDocumentServer().getUser(getSes(), userID);
+            IUser[] users = getDocumentServer().getUsers(getSes());
 
-            if(user == null) return resultError("User not found");
-            if(user.getLicenseType() == LicenseType.TECHNICAL_USER) return resultSuccess(user.getLogin() + " is technical user");
-            if(user.getAccountStatus() != AccountStatus.ACTIVE) return resultSuccess(user.getLogin() + " is not active");;
+            for(IUser userA : users) {
+                this.user=userA;
 
-            this.workbasket = getUserWorkbasket();
-            if (user.getFirstName()!=null && !user.getFirstName().isEmpty()){
-                userCopy = user.getModifiableCopy(getSes());
+                if (user == null) continue;
+                if (user.getLicenseType() == LicenseType.TECHNICAL_USER) continue;
+                if (user.getAccountStatus() != AccountStatus.ACTIVE) continue;
 
-                String firstName = user.getFirstName();
-                String lastName = "";
-                if (user.getLastName()!=null && !user.getLastName().isEmpty()) lastName = user.getLastName();
-                String[] names= lastName.split(" ");
-                if(names.length>0 && names[0] != firstName) lastName = firstName +" " + lastName;
+                this.workbasket = getUserWorkbasket();
+                if (user.getFirstName() != null && !user.getFirstName().isEmpty()) {
+                    userCopy = user.getModifiableCopy(getSes());
 
-                userCopy.setFirstName("");
-                userCopy.setLastName(lastName.trim());
-                userCopy.commit();
+                    String firstName = user.getFirstName();
+                    String lastName = "";
+                    if (user.getLastName() != null && !user.getLastName().isEmpty()) lastName = user.getLastName();
+                    String[] names = lastName.split(" ");
+                    if (names.length > 0 && names[0] != firstName) lastName = firstName + " " + lastName;
 
+                    userCopy.setFirstName("");
+                    userCopy.setLastName(lastName.trim());
+                    userCopy.commit();
+
+                }
             }
-
 
         } catch (Exception e) {
             log.error("Exception Caught");

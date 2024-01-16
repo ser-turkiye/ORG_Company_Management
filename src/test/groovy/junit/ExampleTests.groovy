@@ -3,6 +3,7 @@ package junit
 import de.ser.doxis4.agentserver.AgentExecutionResult
 import org.junit.*
 import ser.userUpdate
+import ser.userUpdateALL
 
 class ExampleTests {
 
@@ -22,7 +23,7 @@ class ExampleTests {
     void testForAgentResult() {
 
         //def agent = new InvolvePartiesOnDelete();
-        def agent = new userUpdate();
+        def agent = new userUpdateALL();
 
         binding["AGENT_EVENT_OBJECT_CLIENT_ID"] = "b3e43608-fc7f-4f97-ae0b-e56a4b7b60b7"
 
