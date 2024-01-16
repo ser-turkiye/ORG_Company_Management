@@ -1,12 +1,8 @@
 package junit
 
 import de.ser.doxis4.agentserver.AgentExecutionResult
-import ser.ContactManagement
-
 import org.junit.*
-import ser.ContractorManagement
-import ser.InvolvePartiesManagement
-import ser.InvolvePartiesOnDelete
+import ser.userUpdate
 
 class ExampleTests {
 
@@ -26,9 +22,9 @@ class ExampleTests {
     void testForAgentResult() {
 
         //def agent = new InvolvePartiesOnDelete();
-        def agent = new InvolvePartiesManagement();
+        def agent = new userUpdate();
 
-        binding["AGENT_EVENT_OBJECT_CLIENT_ID"] = "SR0aPRJ_FOLDER24bccad3b4-096b-48c0-8c16-5c18d7e27cd6182024-01-04T14:41:16.898Z011"
+        binding["AGENT_EVENT_OBJECT_CLIENT_ID"] = "b3e43608-fc7f-4f97-ae0b-e56a4b7b60b7"
 
         def result = (AgentExecutionResult)agent.execute(binding.variables)
         System.out.println(result)
