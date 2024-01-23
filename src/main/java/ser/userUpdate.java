@@ -29,7 +29,7 @@ public class userUpdate extends UnifiedAgent {
             if(user.getLicenseType() == LicenseType.TECHNICAL_USER) return resultSuccess(user.getLogin() + " is technical user");
             if(user.getAccountStatus() != AccountStatus.ACTIVE) return resultSuccess(user.getLogin() + " is not active");;
 
-            this.workbasket = getUserWorkbasket();
+           // this.workbasket = getUserWorkbasket();
             if (user.getFirstName()!=null && !user.getFirstName().isEmpty()){
                 userCopy = user.getModifiableCopy(getSes());
 
