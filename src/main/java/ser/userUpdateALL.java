@@ -30,7 +30,7 @@ public class userUpdateALL extends UnifiedAgent {
                 if (user.getLicenseType() == LicenseType.TECHNICAL_USER) continue;
                 if (user.getAccountStatus() != AccountStatus.ACTIVE) continue;
 
-                this.workbasket = getUserWorkbasket();
+               // this.workbasket = getUserWorkbasket();
                 if (user.getFirstName() != null && !user.getFirstName().isEmpty()) {
                     userCopy = user.getModifiableCopy(getSes());
 
