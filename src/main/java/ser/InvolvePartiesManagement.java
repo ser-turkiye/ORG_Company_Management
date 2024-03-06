@@ -492,7 +492,7 @@ public class InvolvePartiesManagement extends UnifiedAgent {
                     IUser[] prjUnitMembers = unit.getUserMembers();
                     if (prjUnitMembers != null) {
                         for (IUser pMember : prjUnitMembers) {
-                            prjUnitUserIDs.add(pMember.getID());
+                           if(!pMember.isDeleted()) prjUnitUserIDs.add(pMember.getID());
                         }
                     }
                     for (String prjUserID : prjUnitUserIDs) {
@@ -512,14 +512,17 @@ public class InvolvePartiesManagement extends UnifiedAgent {
         try {
             String[] roleIDs = (user != null ? user.getRoleIDs() : null);
             boolean isExist = Arrays.asList(roleIDs).contains(roleID);
-            if(!isExist){
+            if(!isExist) {
                 List<String> rtrn = new ArrayList<String>(Arrays.asList(roleIDs));
                 rtrn.add(roleID);
-                IUser cuser = user.getModifiableCopy(getSes());
-                String[] newRoleIDs = rtrn.toArray(new String[0]);
-                cuser.setRoleIDs(newRoleIDs);
-                cuser.commit();
-                log.info("Add to Role...User:" + cuser.getFullName() + " to ROLE (ID):" + roleID);
+                IUser cuser = null;
+                if (!user.isDeleted()) {
+                    cuser = user.getModifiableCopy(getSes());
+                    String[] newRoleIDs = rtrn.toArray(new String[0]);
+                    cuser.setRoleIDs(newRoleIDs);
+                    cuser.commit();
+                }
+                log.info("Add to Role...User:" + user.getFullName() + " to ROLE (ID):" + roleID);
             }
         }catch (Exception e){
             throw new Exception("Exeption Caught..addToRole : " + e);
@@ -550,10 +553,12 @@ public class InvolvePartiesManagement extends UnifiedAgent {
             if(!isExist){
                 List<String> rtrn = new ArrayList<String>(Arrays.asList(unitIDs));
                 rtrn.add(unitID);
-                IUser cuser = user.getModifiableCopy(getSes());
-                String[] newUnitIDs = rtrn.toArray(new String[0]);
-                cuser.setUnitIDs(newUnitIDs);
-                cuser.commit();
+                if(!user.isDeleted()) {
+                    IUser cuser = user.getModifiableCopy(getSes());
+                    String[] newUnitIDs = rtrn.toArray(new String[0]);
+                    cuser.setUnitIDs(newUnitIDs);
+                    cuser.commit();
+                }
             }
         }catch (Exception e){
             throw new Exception("Exeption Caught..addToRole : " + e);
