@@ -58,8 +58,12 @@ public class UserUpdate extends UnifiedAgent {
             }
             IWorkbasket workbasket = getUserWorkbasket(user);
             if(workbasket != null){
-                if(workbasket.getWorkbasketContentViewDefinitionID() == null){
-                    workbasket.setWorkbasketContentViewDefinitionID(Conf.ClassIDs.ProjectDocumentCycle);
+                String wbcv = workbasket.getWorkbasketContentViewDefinitionID();
+                wbcv = (wbcv == null ? "" : wbcv);
+                if(wbcv.isEmpty()){
+                    IWorkbasket temp = workbasket.getModifiableCopy(getSes());
+                    temp.setWorkbasketContentViewDefinitionID(Conf.ClassIDs.ProjectDocumentCycle);
+                    temp.commit();
                 }
             }
 
