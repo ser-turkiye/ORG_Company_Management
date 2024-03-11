@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.Arrays;
 
 
-public class userUpdate extends UnifiedAgent {
+public class UserUpdate extends UnifiedAgent {
 
     private Logger log = LogManager.getLogger();
 

@@ -2,9 +2,7 @@ package junit
 
 import de.ser.doxis4.agentserver.AgentExecutionResult
 import org.junit.*
-import ser.InvolvePartiesManagement
-import ser.userUpdate
-import ser.userUpdateALL
+import ser.UserUpdateAll
 
 class ExampleTests {
 
@@ -23,7 +21,7 @@ class ExampleTests {
     @Test
     void testForAgentResult() {
 
-        def agent = new userUpdateALL();
+        def agent = new UserUpdateAll();
         //def agent = new userUpdateALL();
 
         binding["AGENT_EVENT_OBJECT_CLIENT_ID"] = "SR0aPRJ_FOLDER249371b84a-31d6-4417-b0a2-5f8bb735f24d182024-01-03T06:26:56.791Z011"

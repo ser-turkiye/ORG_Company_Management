@@ -10,7 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 
-public class userUpdateALL extends UnifiedAgent {
+public class UserUpdateAll extends UnifiedAgent {
     private Logger log = LogManager.getLogger();
     @Override
     protected Object execute() {
