@@ -199,48 +199,52 @@ public class InvolvePartiesManagement extends UnifiedAgent {
             int rowCount = 0;
             if(!Objects.equals(managerName, "")) {
                 IUser mmbr = getDocumentServer().getUserByLoginName(getSes() , getUserLoginByWB(managerID));
-                IStringMatrix settingsMatrix = getDocumentServer().getStringMatrix(paramName, getSes());
-                IStringMatrixModifiable srtMatrixModify = getDocumentServer().getStringMatrix(paramName, getSes()).getModifiableCopy(getSes());
-                settingsMatrix.refresh();
-                srtMatrixModify.appendRow();
-                srtMatrixModify.commit();
-                settingsMatrix.refresh();
+                if(mmbr != null) {
+                    IStringMatrix settingsMatrix = getDocumentServer().getStringMatrix(paramName, getSes());
+                    IStringMatrixModifiable srtMatrixModify = getDocumentServer().getStringMatrix(paramName, getSes()).getModifiableCopy(getSes());
+                    settingsMatrix.refresh();
+                    srtMatrixModify.appendRow();
+                    srtMatrixModify.commit();
+                    settingsMatrix.refresh();
 
-                rowCount = settingsMatrix.getRowCount()-1;
-                //srtMatrixModify.setValue(rowCount, 0, String.valueOf(rowCount + 2), false);
-                srtMatrixModify.setValue(rowCount, 0, prjCode, false);
-                srtMatrixModify.setValue(rowCount, 1, compShortName, false);
-                srtMatrixModify.setValue(rowCount, 2, compName, false);
-                srtMatrixModify.setValue(rowCount, 3, mmbr.getFullName(), false);
-                srtMatrixModify.setValue(rowCount, 4, mmbr.getLogin(), false);
-                srtMatrixModify.setValue(rowCount, 5, mmbr.getID(), false);
-                srtMatrixModify.setValue(rowCount, 6, "EM", false);
-                srtMatrixModify.setValue(rowCount, 7, compIsMain, false);
-                srtMatrixModify.commit();
-                settingsMatrix.refresh();
+                    rowCount = settingsMatrix.getRowCount() - 1;
+                    //srtMatrixModify.setValue(rowCount, 0, String.valueOf(rowCount + 2), false);
+                    srtMatrixModify.setValue(rowCount, 0, prjCode, false);
+                    srtMatrixModify.setValue(rowCount, 1, compShortName, false);
+                    srtMatrixModify.setValue(rowCount, 2, compName, false);
+                    srtMatrixModify.setValue(rowCount, 3, mmbr.getFullName(), false);
+                    srtMatrixModify.setValue(rowCount, 4, mmbr.getLogin(), false);
+                    srtMatrixModify.setValue(rowCount, 5, mmbr.getID(), false);
+                    srtMatrixModify.setValue(rowCount, 6, "EM", false);
+                    srtMatrixModify.setValue(rowCount, 7, compIsMain, false);
+                    srtMatrixModify.commit();
+                    settingsMatrix.refresh();
+                }
             }
 
             if(!Objects.equals(pmanagerName, "")) {
                 IUser mmbr = getDocumentServer().getUserByLoginName(getSes() , getUserLoginByWB(pmanagerID));
-                IStringMatrix settingsMatrix = getDocumentServer().getStringMatrix(paramName, getSes());
-                IStringMatrixModifiable srtMatrixModify = getDocumentServer().getStringMatrix(paramName, getSes()).getModifiableCopy(getSes());
-                settingsMatrix.refresh();
-                srtMatrixModify.appendRow();
-                srtMatrixModify.commit();
-                settingsMatrix.refresh();
+                if(mmbr != null) {
+                    IStringMatrix settingsMatrix = getDocumentServer().getStringMatrix(paramName, getSes());
+                    IStringMatrixModifiable srtMatrixModify = getDocumentServer().getStringMatrix(paramName, getSes()).getModifiableCopy(getSes());
+                    settingsMatrix.refresh();
+                    srtMatrixModify.appendRow();
+                    srtMatrixModify.commit();
+                    settingsMatrix.refresh();
 
-                rowCount = settingsMatrix.getRowCount()-1;
-                //srtMatrixModify.setValue(rowCount, 0, String.valueOf(rowCount + 2), false);
-                srtMatrixModify.setValue(rowCount, 0, prjCode, false);
-                srtMatrixModify.setValue(rowCount, 1, compShortName, false);
-                srtMatrixModify.setValue(rowCount, 2, compName, false);
-                srtMatrixModify.setValue(rowCount, 3, mmbr.getFullName(), false);
-                srtMatrixModify.setValue(rowCount, 4, mmbr.getLogin(), false);
-                srtMatrixModify.setValue(rowCount, 5, mmbr.getID(), false);
-                srtMatrixModify.setValue(rowCount, 6, "PM", false);
-                srtMatrixModify.setValue(rowCount, 7, compIsMain, false);
-                srtMatrixModify.commit();
-                settingsMatrix.refresh();
+                    rowCount = settingsMatrix.getRowCount() - 1;
+                    //srtMatrixModify.setValue(rowCount, 0, String.valueOf(rowCount + 2), false);
+                    srtMatrixModify.setValue(rowCount, 0, prjCode, false);
+                    srtMatrixModify.setValue(rowCount, 1, compShortName, false);
+                    srtMatrixModify.setValue(rowCount, 2, compName, false);
+                    srtMatrixModify.setValue(rowCount, 3, mmbr.getFullName(), false);
+                    srtMatrixModify.setValue(rowCount, 4, mmbr.getLogin(), false);
+                    srtMatrixModify.setValue(rowCount, 5, mmbr.getID(), false);
+                    srtMatrixModify.setValue(rowCount, 6, "PM", false);
+                    srtMatrixModify.setValue(rowCount, 7, compIsMain, false);
+                    srtMatrixModify.commit();
+                    settingsMatrix.refresh();
+                }
             }
 
             if(!memberList.isEmpty()) {
@@ -251,6 +255,7 @@ public class InvolvePartiesManagement extends UnifiedAgent {
                 for (String memberName : memberList) {
                     String mmbrID = membersIDs[c];
                     IUser mmbr = getDocumentServer().getUserByLoginName(getSes() , getUserLoginByWB(mmbrID));
+                    if(mmbr == null) {continue;}
                     srtMatrixModify.appendRow();
                     srtMatrixModify.commit();
                     settingsMatrix.refresh();
@@ -276,6 +281,7 @@ public class InvolvePartiesManagement extends UnifiedAgent {
                 int c = 0;
                 for (String memberOthName : memberOthList) {
                     IUser mmbr = getDocumentServer().getUserByLoginName(getSes() , memberOthName);
+                    if(mmbr == null) {continue;}
                     srtMatrixModify.appendRow();
                     srtMatrixModify.commit();
                     settingsMatrix.refresh();
@@ -371,6 +377,7 @@ public class InvolvePartiesManagement extends UnifiedAgent {
                 for (int i = 0; i < settingsMatrix.getRowCount(); i++) {
                     String userId = settingsMatrix.getValue(i, 5);
                     String role = settingsMatrix.getValue(i, 6);
+                    if(Objects.equals(userId, "") || userId.isEmpty()){continue;}
                     IUser user = getDocumentServer().getUser(getSes() , userId);
                     if(user!=null) {
                         if(Objects.equals(role, "DCC")) {

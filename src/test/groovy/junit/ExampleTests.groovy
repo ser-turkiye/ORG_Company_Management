@@ -2,6 +2,7 @@ package junit
 
 import de.ser.doxis4.agentserver.AgentExecutionResult
 import org.junit.*
+import ser.UserUpdate
 import ser.UserUpdateAll
 
 class ExampleTests {
@@ -21,10 +22,10 @@ class ExampleTests {
     @Test
     void testForAgentResult() {
 
-        def agent = new UserUpdateAll();
+        def agent = new UserUpdate();
         //def agent = new userUpdateALL();
 
-        binding["AGENT_EVENT_OBJECT_CLIENT_ID"] = "SR0aPRJ_FOLDER249371b84a-31d6-4417-b0a2-5f8bb735f24d182024-01-03T06:26:56.791Z011"
+        binding["AGENT_EVENT_OBJECT_CLIENT_ID"] = "49514945-7196-477c-85a9-6cfe60d298c5"
 
         def result = (AgentExecutionResult)agent.execute(binding.variables)
         System.out.println(result)
