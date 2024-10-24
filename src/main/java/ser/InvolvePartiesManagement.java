@@ -436,7 +436,7 @@ public class InvolvePartiesManagement extends UnifiedAgent {
                     compName        = involveParty.getDescriptorValue("ObjectName");
                     compShortName   = involveParty.getDescriptorValue("ContactShortName");
                     compIsMain      = involveParty.getDescriptorValue("ccmPRJCard_status");
-                    if(Objects.equals(compIsMain, "1")){continue;}
+                    //if(Objects.equals(compIsMain, "1")){continue;} ///main comp uyelerini update etmedigibi icin kaldırıldı
                     String unitName = prjCode + "_" + compShortName;
                     unitNames.add(unitName);
                     updateUnit(getContractorMembersFromGVlist(compShortName));

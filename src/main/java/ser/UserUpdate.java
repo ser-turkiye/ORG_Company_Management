@@ -1,15 +1,14 @@
 package ser;
 
-import com.ser.blueline.AccountStatus;
-import com.ser.blueline.IRole;
-import com.ser.blueline.IUser;
-import com.ser.blueline.LicenseType;
+import com.ser.blueline.*;
 import com.ser.blueline.bpm.IWorkbasket;
 import de.ser.doxis4.agentserver.UnifiedAgent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 
 public class UserUpdate extends UnifiedAgent {
@@ -28,20 +27,20 @@ public class UserUpdate extends UnifiedAgent {
             if(user.getLicenseType() == LicenseType.TECHNICAL_USER) return resultSuccess(user.getLogin() + " is technical user");
             if(user.getAccountStatus() != AccountStatus.ACTIVE) return resultSuccess(user.getLogin() + " is not active");;
 
-            if (user.getFirstName()!=null && !user.getFirstName().isEmpty()){
-                IUser tmp1 = user.getModifiableCopy(getSes());
-
-                String firstName = user.getFirstName();
-                String lastName = "";
-                if (user.getLastName()!=null && !user.getLastName().isEmpty()) lastName = user.getLastName();
-                String[] names= lastName.split(" ");
-                if(names.length>0 && names[0] != firstName) lastName = firstName +" " + lastName;
-
-                tmp1.setFirstName("");
-                tmp1.setLastName(lastName.trim());
-                tmp1.commit();
-
-            }
+//            if (user.getFirstName()!=null && !user.getFirstName().isEmpty()){
+//                IUser tmp1 = user.getModifiableCopy(getSes());
+//
+//                String firstName = user.getFirstName();
+//                String lastName = "";
+//                if (user.getLastName()!=null && !user.getLastName().isEmpty()) lastName = user.getLastName();
+//                String[] names= lastName.split(" ");
+//                if(names.length>0 && names[0] != firstName) lastName = firstName +" " + lastName;
+//
+//                tmp1.setFirstName("");
+//                tmp1.setLastName(lastName.trim());
+//                tmp1.commit();
+//
+//            }
             if (user.getLicenseType().equals(LicenseType.LIGHTWEIGHT_USER)) {
                 String[] rids = user.getRoleIDs();
                 if(rids != null && rids.length > 0){
@@ -59,8 +58,24 @@ public class UserUpdate extends UnifiedAgent {
             IWorkbasket workbasket = getUserWorkbasket(user);
             if(workbasket != null){
                 if(workbasket.getWorkbasketContentViewDefinitionID() == null){
-                    workbasket.setWorkbasketContentViewDefinitionID(Conf.ClassIDs.ProjectDocumentCycle);
+                    //workbasket.setWorkbasketContentViewDefinitionID(Conf.ClassIDs.ProjectDocumentCycle);
+                    IWorkbasket tmpWB = workbasket.getModifiableCopy(getSes());
+                    tmpWB.setWorkbasketContentViewDefinitionID(Conf.ClassIDs.ProjectDocumentCycle);
+                    ///Default WB sharing to admin -- start
+                    Object[] orgElmnt = tmpWB.getAccessibleBy().toArray();
+                    Set<IOrgaElement> orgElmn2 = new HashSet<>();
+                    for(int i=0;i<orgElmnt.length;i++){
+                        orgElmn2.add((IOrgaElement) orgElmnt[i]);
+                    }
+                    IRole role = getDocumentServer().getRoleByName(getSes(), "admins");
+                    if(role != null) {
+                        IOrgaElement orgRole = (IOrgaElement) role;
+                        orgElmn2.add(orgRole);
+                        tmpWB.setAccessibleBy(orgElmn2);
+                    }
+                    tmpWB.commit();
                 }
+
             }
 
         } catch (Exception e) {
