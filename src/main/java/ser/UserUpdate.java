@@ -27,6 +27,7 @@ public class UserUpdate extends UnifiedAgent {
             if(user.getLicenseType() == LicenseType.TECHNICAL_USER) return resultSuccess(user.getLogin() + " is technical user");
             if(user.getAccountStatus() != AccountStatus.ACTIVE) return resultSuccess(user.getLogin() + " is not active");;
 
+
 //            if (user.getFirstName()!=null && !user.getFirstName().isEmpty()){
 //                IUser tmp1 = user.getModifiableCopy(getSes());
 //
@@ -41,6 +42,8 @@ public class UserUpdate extends UnifiedAgent {
 //                tmp1.commit();
 //
 //            }
+
+/*
             if (user.getLicenseType().equals(LicenseType.LIGHTWEIGHT_USER)) {
                 String[] rids = user.getRoleIDs();
                 if(rids != null && rids.length > 0){
@@ -54,7 +57,15 @@ public class UserUpdate extends UnifiedAgent {
                         }
                     }
                 }
-            }
+            }*/
+
+            IUser userCopy = user.getModifiableCopy(getSes());
+            userCopy.setLicenseType(LicenseType.LIGHTWEIGHT_USER);
+            userCopy.commit();
+
+
+
+
             IWorkbasket workbasket = getUserWorkbasket(user);
             if(workbasket != null){
                 if(workbasket.getWorkbasketContentViewDefinitionID() == null){

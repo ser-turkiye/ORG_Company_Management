@@ -416,6 +416,14 @@ public class InvolvePartiesManagement extends UnifiedAgent {
                 if (!membersDcc.contains(prjUserDccID)) {
                     removeFromRole(prjRoleDccUser,prjRoleDcc.getID());
                     log.info("removed user:" + prjRoleDccUser.getFullName() + " from role:" + prjRoleDcc.getName());
+                }else {
+                    //we are setting dcc licence to Normal
+                    if (prjRoleDccUser.getLicenseType().equals(LicenseType.LIGHTWEIGHT_USER)) {
+                        IUser userCopy = prjRoleDccUser.getModifiableCopy(getSes());
+                        userCopy.setLicenseType(LicenseType.NORMAL_USER);
+                        userCopy.commit();
+                    }
+
                 }
             }
         }catch (Exception e){
